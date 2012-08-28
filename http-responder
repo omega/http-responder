@@ -8,6 +8,7 @@ my $stash = {
     headers => 'Cache-Control: max-age=1, no-cache',
     body => 'something',
     sleep => 100,
+    status => 200,
 };
 
 get '/' => sub {
@@ -23,6 +24,7 @@ get '/' => sub {
   warn "sleeping: " . $stash->{sleep};
   usleep($stash->{sleep} * 1000) if $stash->{sleep};
   warn "slept: " . $stash->{sleep};
+  $self->res->code($stash->{status}) if $stash->{status};
   $self->render('index');
 };
 
@@ -32,8 +34,9 @@ any '/conf' => sub {
         $stash->{headers} = $self->param('headers');
         $stash->{body} = $self->param('body');
         $stash->{sleep} = $self->param('sleep');
+        $stash->{status} = $self->param('status');
     }
-    $self->stash(%$stash);
+    $self->stash(%$stash, url => $self->url_for('/')->to_abs);
     $self->render('conf');
 };
 
@@ -53,9 +56,12 @@ __DATA__
 <textarea name="body"><%= $body %></textarea>
 <label>Sleepytime (ms)</label>
 <input type="number" name="sleep" value="<%= $sleep %>">
+<label>status code</label>
+<input type="number" name="status" value="<%= $status %>">
 <button type="submit">Update</button>
-
-<iframe src="http://localhost:3000/"></iframe>
+<label>URL</label>
+<input type="text" value="<%= $url %>" readonly>
+<iframe src="<%= $url %>"></iframe>
 @@ layouts/default.html.ep
 <!DOCTYPE html>
 <html>
