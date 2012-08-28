@@ -1,0 +1,72 @@
+#!/usr/bin/env perl
+use Mojolicious::Lite;
+use Time::HiRes qw(usleep);
+use Mojo::Headers;
+use Data::Dump qw/dump/;
+
+my $stash = {
+    headers => 'Cache-Control: max-age=1, no-cache',
+    body => 'something',
+    sleep => 100,
+};
+
+get '/' => sub {
+  my $self = shift;
+  $self->stash(%$stash);
+  my $head_text = $stash->{headers};
+  if ($head_text) {
+      foreach my $l ( split(/\r\n/, $head_text ) ) {
+          my ($key, $val) = (split(/:\s/, $l, 2));
+          $self->res->headers->add($key, $val);
+      }
+  }
+  warn "sleeping: " . $stash->{sleep};
+  usleep($stash->{sleep} * 1000) if $stash->{sleep};
+  warn "slept: " . $stash->{sleep};
+  $self->render('index');
+};
+
+any '/conf' => sub {
+    my $self = shift;
+    if ($self->req->method eq 'POST') {
+        $stash->{headers} = $self->param('headers');
+        $stash->{body} = $self->param('body');
+        $stash->{sleep} = $self->param('sleep');
+    }
+    $self->stash(%$stash);
+    $self->render('conf');
+};
+
+app->start;
+__DATA__
+@@ index.html.ep
+
+<%= $body %>
+
+@@ conf.html.ep
+% layout 'default';
+% title 'http-responder';
+<form method="POST">
+<label>Headers</label>
+<textarea name="headers"><%= $headers %></textarea>
+<label>Body</label>
+<textarea name="body"><%= $body %></textarea>
+<label>Sleepytime (ms)</label>
+<input type="number" name="sleep" value="<%= $sleep %>">
+<button type="submit">Update</button>
+
+<iframe src="http://localhost:3000/"></iframe>
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+  <head><title><%= title %></title>
+  <style>
+  label, textarea, input, button, iframe {
+    display: block;
+    min-width: 400px;
+    margin-bottom: 10px;
+  }
+  </style>
+  </head>
+  <body><%= content %></body>
+</html>
