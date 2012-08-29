@@ -3,10 +3,11 @@ use Mojolicious::Lite;
 use Time::HiRes qw(usleep);
 use Mojo::Headers;
 use Data::Dump qw/dump/;
+use Mojo::Util qw/html_unescape/;
 
 my $stash = {
     headers => 'Cache-Control: max-age=1, no-cache',
-    body => 'something',
+    body => html_unescape('<h1>something</h1>'),
     sleep => 100,
     status => 200,
 };
@@ -14,7 +15,7 @@ any '/conf' => sub {
     my $self = shift;
     if ($self->req->method eq 'POST') {
         $stash->{headers} = $self->param('headers');
-        $stash->{body} = $self->param('body');
+        $stash->{body} = html_unescape($self->param('body'));
         $stash->{sleep} = $self->param('sleep');
         $stash->{status} = $self->param('status');
     }
@@ -47,7 +48,7 @@ app->start;
 __DATA__
 @@ index.html.ep
 
-<%= $body %>
+<%== $body %>
 
 @@ conf.html.ep
 % layout 'default';
