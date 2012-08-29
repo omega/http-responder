@@ -10,8 +10,19 @@ my $stash = {
     sleep => 100,
     status => 200,
 };
+any '/conf' => sub {
+    my $self = shift;
+    if ($self->req->method eq 'POST') {
+        $stash->{headers} = $self->param('headers');
+        $stash->{body} = $self->param('body');
+        $stash->{sleep} = $self->param('sleep');
+        $stash->{status} = $self->param('status');
+    }
+    $self->stash(%$stash, url => $self->url_for('/')->to_abs);
+    $self->render('conf');
+};
 
-get '/' => sub {
+my $default =  sub {
   my $self = shift;
   $self->stash(%$stash);
   my $head_text = $stash->{headers};
@@ -28,17 +39,9 @@ get '/' => sub {
   $self->render('index');
 };
 
-any '/conf' => sub {
-    my $self = shift;
-    if ($self->req->method eq 'POST') {
-        $stash->{headers} = $self->param('headers');
-        $stash->{body} = $self->param('body');
-        $stash->{sleep} = $self->param('sleep');
-        $stash->{status} = $self->param('status');
-    }
-    $self->stash(%$stash, url => $self->url_for('/')->to_abs);
-    $self->render('conf');
-};
+get '/' => $default;
+get '/*rest' => $default;
+
 
 app->start;
 __DATA__
