@@ -7,7 +7,7 @@ use Mojo::Util qw/html_unescape/;
 
 my $stash = {
     headers => 'Cache-Control: max-age=1, no-cache',
-    body => html_unescape('<h1>something</h1>'),
+    body => '<h1>something</h1>',
     sleep => 100,
     status => 200,
 };
