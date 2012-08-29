@@ -2,7 +2,6 @@
 use Mojolicious::Lite;
 use Time::HiRes qw(usleep);
 use Mojo::Headers;
-use Data::Dump qw/dump/;
 use Mojo::Util qw/html_unescape/;
 
 my $stash = {
